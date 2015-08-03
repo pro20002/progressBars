@@ -1,0 +1,231 @@
+<!--
+// ============================================================================
+// Project : Progress Bars Demo
+// ============================================================================
+//
+// Name    : index.html
+//
+// Purpose : Animate Bar change
+//
+//
+// History
+// -------
+// 02.08.15  K. Kim                 initial code
+// ============================================================================
+// Copyright (c) 2015, K. Kim
+// All rights reserved.
+// ============================================================================
+-->
+<!doctype html>
+<html lang='en-GB'>
+<head>
+  <meta charset='utf-8'>
+  <title>Progress Bars Demo</title>  
+</head>
+<body>
+  <h1>Progress Bars Demo</h1>
+  
+  <div id='container'></div>
+  
+  <script id='template' type='text/ractive'>
+	<div class='wrapper'>
+		<div class='bar1'>
+			<div style='background-color:{{bar1BGcolor}}; width:{{bar1Width}}%; height:20px;'>
+				<span class="display">{{bar1}}%</span>
+			</div>			
+		</div>				
+		
+		<div class='bar2'>
+			<div style='background-color: {{bar2BGcolor}}; width:{{bar2Width}}%; height:20px'>
+				<span class="display">{{bar2}}%</span>
+			</div>	
+		</div>
+			
+		<div class='bar3'>
+			<div style='background-color: {{bar3BGcolor}}; width:{{bar3Width}}%; height:20px'>
+				<span class="display">{{bar3}}%</span>
+			</div>	
+		</div>	
+	</div>
+	<div>
+		<select value='{{selectedBar}}'>
+  			{{#each progressBars}}
+    			<option>{{this}}</option>
+  			{{/each}}
+		</select>
+		<button on-click='btnMinus25'>-25</button>
+		<button on-click='btnMinus10'>-10</button>
+		<button on-click='btnPlus10'>+10</button>
+		<button on-click='btnPlus25'>+25</button>
+	</div>	
+  </script>
+
+  <script src='http://cdn.ractivejs.org/latest/ractive.min.js'></script>
+  <link href="../presentation/progressBars.less" type="text/css" rel="stylesheet/less" media="screen" />
+  <script src="../lib/less-1.3.0.min.js" type="text/javascript"></script>
+  <script>
+ 	//Color
+	var PALETTE = {
+		basic:   '#99CCFF', //basic background color
+		overflow:'#FF0000', //overflow background color > 100
+		border:  '#F0F0F5'  //bar border color
+	};
+	//Bar select options
+	var selectOptions = {
+		progress1: '#progress1',
+		progress2: '#progress2',
+		progress3: '#progress3'
+	};	
+	var barName = {
+		bar1: 'bar1',
+		bar2: 'bar2',
+		bar3: 'bar3'
+	};
+	//
+
+  	var progressBars = [selectOptions.progress1, selectOptions.progress2, selectOptions.progress3];
+	
+    var ractive = new Ractive({
+      el:       '#container',
+      template: '#template',
+
+      //initial data
+      data: { 
+	  	progressBars: progressBars,
+    	selectedBar:  progressBars[0],
+		
+		bgcolor : PALETTE.basic,
+		overflowColor : PALETTE.overflow,
+		
+		bar1:        25,
+		bar1Width:   25,
+		bar1BGcolor: PALETTE.basic,
+		
+    	bar2:        50,
+		bar2Width:   50,
+		bar2BGcolor: PALETTE.basic,
+		
+    	bar3:        75,
+		bar3Width:   75,
+		bar3BGcolor: PALETTE.basic
+	  }
+    });
+	
+	//add event listener on button
+	listener = ractive.on({
+  		btnMinus25: function () {
+    		setProgressBar(getSelectedBar(), -25);
+  		},
+  		btnMinus10: function () {
+    		setProgressBar(getSelectedBar(), -10);
+  		},
+		btnPlus10: function () {
+			setProgressBar(getSelectedBar(), 10);
+  		},
+		btnPlus25: function () {
+    		setProgressBar(getSelectedBar(), 25);
+  		}
+	});	
+	
+  	// -------------------------------------------------------------------------
+   	// Function : getSelectedBar()
+   	// Purpose  : get current selected option
+   	// Parameter: no
+   	// Return   : str - option value
+   	// -------------------------------------------------------------------------
+	function getSelectedBar()
+	{
+		return ractive.get('selectedBar');
+	}
+	
+   	// -------------------------------------------------------------------------
+   	// Function : setProgressBar(bar, v)
+   	// Purpose  : selected bar display value(%) and animate bar change
+   	// Parameter: bar - selected option(bar), v - pressed button value(+/-) 
+   	// Return   : none
+   	// -------------------------------------------------------------------------
+	function setProgressBar(bar, v)
+	{
+		var current = 0;
+		
+		if(bar === selectOptions.progress1)
+		{
+			ractive.set({bar1BGcolor:PALETTE.basic});
+			current = ractive.get(barName.bar1);
+			ractive.set({bar1:validateLimit(current,v)});
+			ractive.set({bar1Width:validateWidthLimit(bar,current,v)});
+		}
+		else if(bar === selectOptions.progress2)
+		{
+			ractive.set({bar2BGcolor:PALETTE.basic});
+			current = ractive.get(barName.bar2);
+			ractive.set({bar2:validateLimit(current,v)});
+			ractive.set({bar2Width:validateWidthLimit(bar,current,v)});
+		}
+		else if(bar === selectOptions.progress3)
+		{
+			ractive.set({bar3BGcolor:PALETTE.basic});
+			current = ractive.get(barName.bar3);
+			ractive.set({bar3:validateLimit(current,v)});
+			ractive.set({bar3Width:validateWidthLimit(bar,current,v)});
+		}
+	}
+	
+   	// -------------------------------------------------------------------------
+   	// Function : validateLimit(current, v)
+   	// Purpose  : validate current value
+   	// Parameter: current - current value, v - pressed button value(+/-) 
+   	// Return   : int
+   	// -------------------------------------------------------------------------
+	function validateLimit(current, v)
+	{
+		return (current + v) < 0 ? 0 : (current + v);
+	}
+	
+	// -------------------------------------------------------------------------
+   	// Function : validateWidthLimit(bar, current, v)
+   	// Purpose  : calculate bar width
+   	// Parameter: bar - current selected bar, current - current width, 
+	//			  v - pressed button value(+/-) 
+   	// Return   : int
+   	// -------------------------------------------------------------------------
+	function validateWidthLimit(bar, current, v)
+	{
+		var width = current + v;
+		
+		if(width > 100)
+		{
+			paintOverFlowBGColor(bar);	
+			width = 100;
+		}
+		else if(width < 0)
+		{
+			width = 0;
+		}
+		return width;
+	}
+	
+	// -------------------------------------------------------------------------
+   	// Function : paintOverFlowBGColor(bar)
+   	// Purpose  : change background color when overflow
+   	// Parameter: bar - current selected option 
+   	// Return   : none
+   	// -------------------------------------------------------------------------
+	function paintOverFlowBGColor(bar)
+	{
+		if(bar === selectOptions.progress1)
+		{
+			ractive.set({bar1BGcolor: PALETTE.overflow});	
+		}
+		else if(bar === selectOptions.progress2)
+		{
+			ractive.set({bar2BGcolor: PALETTE.overflow});
+		}	
+		else if(bar === selectOptions.progress3)
+		{
+			ractive.set({bar3BGcolor: PALETTE.overflow});
+		}
+	}
+  </script>
+</body>
+</html>
